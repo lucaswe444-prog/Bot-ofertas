@@ -1,3 +1,4 @@
+```python
 import os
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
@@ -6,6 +7,8 @@ TOKEN = os.environ["BOT_TOKEN"]
 PORT = int(os.environ.get("PORT", "10000"))
 URL = os.environ["RENDER_EXTERNAL_URL"]
 
+GRUPO = "@textudoofertas"
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🔥 Bot de Ofertas ativado!\n\n"
@@ -13,10 +16,22 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def receber_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    link = update.message.text
+
+    mensagem = (
+        "🔥 OFERTA ENCONTRADA! 🔥\n\n"
+        "🛍️ Confira o produto:\n\n"
+        f"🔗 {link}\n\n"
+        "👉 Aproveite enquanto estiver disponível!"
+    )
+
+    await context.bot.send_message(
+        chat_id=GRUPO,
+        text=mensagem
+    )
+
     await update.message.reply_text(
-        "🔎 Produto recebido!\n\n"
-        f"🔗 {update.message.text}\n\n"
-        "Estou preparando a oferta... 🚀"
+        "✅ Oferta publicada no grupo!"
     )
 
 app = Application.builder().token(TOKEN).build()
@@ -30,3 +45,4 @@ app.run_webhook(
     url_path=TOKEN,
     webhook_url=f"{URL}/{TOKEN}"
 )
+```
