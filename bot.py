@@ -3,6 +3,8 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
 TOKEN = os.environ["BOT_TOKEN"]
+PORT = int(os.environ.get("PORT", "10000"))
+WEBHOOK_URL = os.environ["WEBHOOK_URL"]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -14,9 +16,9 @@ async def receber_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
     texto = update.message.text
 
     await update.message.reply_text(
-        "🔎 Recebi o produto!\n\n"
+        "🔎 Produto recebido!\n\n"
         f"🔗 {texto}\n\n"
-        "Em breve vou analisar o produto e montar a oferta. 🚀"
+        "Estou preparando a oferta... 🚀"
     )
 
 app = Application.builder().token(TOKEN).build()
@@ -24,4 +26,9 @@ app = Application.builder().token(TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, receber_link))
 
-app.run_polling()
+app.run_webhook(
+    listen="0.0.0.0",
+    port=PORT,
+    url_path=TOKEN,
+    webhook_url=f"{WEBHOOK_URL}/{TOKEN}"
+)
