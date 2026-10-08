@@ -4,7 +4,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, ContextTyp
 
 TOKEN = os.environ["BOT_TOKEN"]
 PORT = int(os.environ.get("PORT", "10000"))
-WEBHOOK_URL = os.environ["WEBHOOK_URL"]
+URL = os.environ["RENDER_EXTERNAL_URL"]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -13,11 +13,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def receber_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    texto = update.message.text
-
     await update.message.reply_text(
         "🔎 Produto recebido!\n\n"
-        f"🔗 {texto}\n\n"
+        f"🔗 {update.message.text}\n\n"
         "Estou preparando a oferta... 🚀"
     )
 
@@ -30,5 +28,5 @@ app.run_webhook(
     listen="0.0.0.0",
     port=PORT,
     url_path=TOKEN,
-    webhook_url=f"{WEBHOOK_URL}/{TOKEN}"
+    webhook_url=f"{URL}/{TOKEN}"
 )
