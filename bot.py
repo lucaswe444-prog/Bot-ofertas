@@ -1,4 +1,6 @@
 import os
+import re
+import random
 import requests
 from bs4 import BeautifulSoup
 from telegram import Update
@@ -9,6 +11,14 @@ PORT = int(os.environ.get("PORT", "10000"))
 URL = os.environ["RENDER_EXTERNAL_URL"]
 
 GRUPO = "@textudoofertas"
+
+FRASES = [
+    "😂 Seu bolso pediu calma, mas você não ouviu!",
+    "👀 Olhou, gostou... agora segura a vontade!",
+    "😎 Achadinho desses não aparece todo dia!",
+    "😂 Não precisava, mas esse preço ajuda a convencer!",
+    "🔥 O preço caiu e a vontade de comprar subiu!",
+]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -22,9 +32,7 @@ async def receber_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         resposta = requests.get(
             link,
-            headers={
-                "User-Agent": "Mozilla/5.0"
-            },
+            headers={"User-Agent": "Mozilla/5.0"},
             timeout=15
         )
 
@@ -33,16 +41,46 @@ async def receber_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
         titulo = soup.title.string if soup.title else "Produto Shopee"
         titulo = titulo.strip()
 
-        mensagem = (
-            "🔎 PRODUTO ENCONTRADO!\n\n"
-            "🛍️ " + titulo + "\n\n"
-            "🔗 " + link
-        )
+        texto = soup.get_text(" ", strip=True)
+
+        precos = re.findall(r'R\$\s?[\d.,]+', texto)
+
+        if len(precos) >= 2:
+            preco_antigo = precos[0]
+            preco_atual = precos[1]
+
+            mensagem = (
+                "🔥 OFERTA ENCONTRADA! 🔥\n\n"
+                "🛍️ " + titulo + "\n\n"
+                "💰 De: " + preco_antigo + "\n"
+                "🔥 Por: " + preco_atual + "\n\n"
+                + random.choice(FRASES) + "\n\n"
+                "🔗 COMPRAR:\n" + link
+            )
+
+        elif len(precos) == 1:
+            mensagem = (
+                "🛍️ ACHADINHO DO DIA! 🛍️\n\n"
+                + titulo + "\n\n"
+                "💰 Preço: " + precos[0] + "\n\n"
+                + random.choice(FRASES) + "\n\n"
+                "🔗 COMPRAR:\n" + link
+            )
+
+        else:
+            mensagem = (
+                "🔥 OFERTA ENCONTRADA! 🔥\n\n"
+                "🛍️ " + titulo + "\n\n"
+                + random.choice(FRASES) + "\n\n"
+                "🔗 COMPRAR:\n" + link
+            )
 
     except Exception:
         mensagem = (
-            "🛍️ OFERTA ENCONTRADA!\n\n"
-            "🔗 " + link
+            "🔥 OFERTA ENCONTRADA! 🔥\n\n"
+            "🛍️ Confira o produto!\n\n"
+            + random.choice(FRASES) + "\n\n"
+            "🔗 COMPRAR:\n" + link
         )
 
     await context.bot.send_message(
@@ -51,7 +89,7 @@ async def receber_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     await update.message.reply_text(
-        "✅ Produto publicado no grupo!"
+        "✅ Oferta publicada no grupo!"
     )
 
 app = Application.builder().token(TOKEN).build()
@@ -64,4 +102,4 @@ app.run_webhook(
     port=PORT,
     url_path=TOKEN,
     webhook_url=URL + "/" + TOKEN
-)
+            )
