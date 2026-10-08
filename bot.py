@@ -1,4 +1,6 @@
 import os
+import requests
+from bs4 import BeautifulSoup
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
@@ -9,13 +11,48 @@ URL = os.environ["RENDER_EXTERNAL_URL"]
 GRUPO = "@textudoofertas"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🔥 Bot de Ofertas ativado!\n\nEnvie o link de um produto para começar.")
+    await update.message.reply_text(
+        "🔥 Bot de Ofertas ativado!\n\n"
+        "Envie o link de um produto para começar."
+    )
 
 async def receber_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
     link = update.message.text
-    mensagem = "🔥 OFERTA ENCONTRADA! 🔥\n\n🛍️ Confira o produto:\n\n🔗 " + link + "\n\n👉 Aproveite enquanto estiver disponível!"
-    await context.bot.send_message(chat_id=GRUPO, text=mensagem)
-    await update.message.reply_text("✅ Oferta publicada no grupo!")
+
+    try:
+        resposta = requests.get(
+            link,
+            headers={
+                "User-Agent": "Mozilla/5.0"
+            },
+            timeout=15
+        )
+
+        soup = BeautifulSoup(resposta.text, "html.parser")
+
+        titulo = soup.title.string if soup.title else "Produto Shopee"
+        titulo = titulo.strip()
+
+        mensagem = (
+            "🔎 PRODUTO ENCONTRADO!\n\n"
+            "🛍️ " + titulo + "\n\n"
+            "🔗 " + link
+        )
+
+    except Exception:
+        mensagem = (
+            "🛍️ OFERTA ENCONTRADA!\n\n"
+            "🔗 " + link
+        )
+
+    await context.bot.send_message(
+        chat_id=GRUPO,
+        text=mensagem
+    )
+
+    await update.message.reply_text(
+        "✅ Produto publicado no grupo!"
+    )
 
 app = Application.builder().token(TOKEN).build()
 
